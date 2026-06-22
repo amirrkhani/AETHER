@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AETHER — Intelligence, Worn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            void:      '#0A0A0B',
+            alabaster: '#F5F4F0',
+            gold:      '#C9A96E',
+            'gold-dim':'#9A7A4A',
+            surface:   '#111113',
+            card:      '#1A1A1E',
+            muted:     '#8A8A8E',
+            border:    '#2A2A2E',
+          },
+          fontFamily: {
+            display: ['Cormorant Garamond', 'Georgia', 'serif'],
+            sans:    ['Inter', 'system-ui', 'sans-serif'],
+          },
+          letterSpacing: {
+            'ultra':  '0.25em',
+            'wide2':  '0.15em',
+          },
+          animation: {
+            'breathe':      'breathe 6s ease-in-out infinite',
+            'breathe-ring': 'breathe-ring 6s ease-in-out infinite',
+            'float':        'float 8s ease-in-out infinite',
+            'fade-up':      'fade-up 0.9s ease forwards',
+            'gold-shimmer': 'gold-shimmer 3s ease-in-out infinite',
+          },
+          keyframes: {
+            breathe: {
+              '0%, 100%': { transform: 'scale(1)',    opacity: '0.85' },
+              '50%':       { transform: 'scale(1.08)', opacity: '1'    },
+            },
+            'breathe-ring': {
+              '0%, 100%': { transform: 'scale(1)',    opacity: '0.3' },
+              '50%':       { transform: 'scale(1.18)', opacity: '0.1' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)'   },
+              '50%':       { transform: 'translateY(-18px)' },
+            },
+            'fade-up': {
+              from: { opacity: '0', transform: 'translateY(28px)' },
+              to:   { opacity: '1', transform: 'translateY(0)'    },
+            },
+            'gold-shimmer': {
+              '0%, 100%': { backgroundPosition: '0% 50%'   },
+              '50%':       { backgroundPosition: '100% 50%' },
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* ── Base reset ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body  { background: #0A0A0B; color: #F5F4F0; overflow-x: hidden; }
+
+    /* ── Scrollbar ──────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0A0A0B; }
+    ::-webkit-scrollbar-thumb { background: #2A2A2E; border-radius: 2px; }
+
+    /* ── Gold gradient text ─────────────────────────── */
+    .text-gold-gradient {
+      background: linear-gradient(135deg, #C9A96E 0%, #E8D4A8 45%, #C9A96E 100%);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gold-shimmer 3s ease-in-out infinite;
+    }
+
+    /* ── Glass card ─────────────────────────────────── */
+    .glass {
+      background: rgba(26, 26, 30, 0.72);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border: 1px solid rgba(201, 169, 110, 0.12);
+    }
+    .glass:hover {
+      border-color: rgba(201, 169, 110, 0.32);
+      background: rgba(26, 26, 30, 0.85);
+    }
+
+    /* ── Orb ────────────────────────────────────────── */
+    .orb-core {
+      background: radial-gradient(circle at 38% 38%,
+        rgba(201,169,110,0.95) 0%,
+        rgba(180,140,75,0.70) 35%,
+        rgba(120,90,40,0.30)  65%,
+        transparent            100%);
+    }
+    .orb-ring {
+      background: radial-gradient(circle,
+        rgba(201,169,110,0.18) 0%,
+        transparent 70%);
+    }
+
+    /* ── Noise texture overlay ──────────────────────── */
+    .noise::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    /* ── Reveal animation (JS-triggered) ───────────── */
+    .reveal        { opacity: 0; transform: translateY(32px); transition: opacity 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.9s cubic-bezier(0.22,1,0.36,1); }
+    .reveal.in-view{ opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.12s; }
+    .reveal-delay-2 { transition-delay: 0.24s; }
+    .reveal-delay-3 { transition-delay: 0.36s; }
+    .reveal-delay-4 { transition-delay: 0.48s; }
+
+    /* ── Hairline ────────────────────────────────────── */
+    .hairline { border-color: rgba(42,42,46,0.9); }
+
+    /* ── Nav link ────────────────────────────────────── */
+    .nav-link { position: relative; }
+    .nav-link::after {
+      content: '';
+      position: absolute; bottom: -2px; left: 0;
+      width: 0; height: 1px;
+      background: #C9A96E;
+      transition: width 0.35s cubic-bezier(0.22,1,0.36,1);
+    }
+    .nav-link:hover::after { width: 100%; }
+
+    /* ── Feature icon ring ───────────────────────────── */
+    .icon-ring {
+      border: 1px solid rgba(201,169,110,0.22);
+      transition: border-color 0.35s ease, box-shadow 0.35s ease;
+    }
+    .icon-ring:hover {
+      border-color: rgba(201,169,110,0.55);
+      box-shadow: 0 0 20px rgba(201,169,110,0.08);
+    }
+
+    /* ── Showcase tab ────────────────────────────────── */
+    .tab-btn { transition: color 0.3s ease, border-color 0.3s ease; }
+    .tab-btn.active { color: #C9A96E; border-color: #C9A96E; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: grid; }
+
+    /* ── CTA button ──────────────────────────────────── */
+    .btn-gold {
+      background: linear-gradient(135deg, #C9A96E, #A88040);
+      transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s ease, filter 0.25s ease;
+    }
+    .btn-gold:hover {
+      transform: translateY(-2px) scale(1.015);
+      box-shadow: 0 12px 40px rgba(201,169,110,0.28);
+      filter: brightness(1.08);
+    }
+    .btn-gold:active { transform: translateY(0) scale(0.99); }
+
+    .btn-outline {
+      border: 1px solid rgba(201,169,110,0.45);
+      transition: border-color 0.3s ease, background 0.3s ease, transform 0.25s cubic-bezier(0.22,1,0.36,1);
+    }
+    .btn-outline:hover {
+      border-color: #C9A96E;
+      background: rgba(201,169,110,0.06);
+      transform: translateY(-2px);
+    }
+
+    /* ── Stat counter ────────────────────────────────── */
+    .stat-number { font-variant-numeric: tabular-nums; }
+
+    /* ── Gradient divider ───────────────────────────── */
+    .divider-gold {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,169,110,0.35), transparent);
+    }
+
+    /* ── Testimonial card hover ─────────────────────── */
+    .testimonial-card { transition: transform 0.4s cubic-bezier(0.22,1,0.36,1), border-color 0.4s ease; }
+    .testimonial-card:hover { transform: translateY(-4px); border-color: rgba(201,169,110,0.28); }
+
+    /* ── Reduced motion ──────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      .reveal { opacity: 1 !important; transform: none !important; }
+    }
+  </style>
+</head>
+<body class="font-sans">
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║             NAVIGATION               ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <nav id="navbar" class="fixed top-0 inset-x-0 z-50 transition-all duration-500"
+       style="padding: 28px 0;">
+    <div class="max-w-6xl mx-auto px-6 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-7 h-7 rounded-full orb-core animate-breathe flex-shrink-0"></div>
+        <span class="font-display text-xl tracking-ultra text-alabaster group-hover:text-gold transition-colors duration-300">AETHER</span>
+      </a>
+
+      <!-- Desktop nav -->
+      <ul class="hidden md:flex items-center gap-10">
+        <li><a href="#features"   class="nav-link text-xs tracking-ultra text-muted hover:text-alabaster transition-colors duration-300">FEATURES</a></li>
+        <li><a href="#showcase"   class="nav-link text-xs tracking-ultra text-muted hover:text-alabaster transition-colors duration-300">SHOWCASE</a></li>
+        <li><a href="#experience" class="nav-link text-xs tracking-ultra text-muted hover:text-alabaster transition-colors duration-300">EXPERIENCE</a></li>
+        <li><a href="#reserve"    class="nav-link text-xs tracking-ultra text-muted hover:text-alabaster transition-colors duration-300">RESERVE</a></li>
+      </ul>
+
+      <!-- CTA -->
+      <a href="#reserve" class="hidden md:inline-flex items-center gap-2 btn-gold text-void text-xs font-semibold tracking-wide2 px-5 py-2.5 rounded-full">
+        Pre-order
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      </a>
+
+      <!-- Hamburger (mobile) -->
+      <button id="mobile-toggle" class="md:hidden w-8 h-8 flex flex-col justify-center items-end gap-1.5" aria-label="Menu">
+        <span class="block h-px bg-alabaster transition-all duration-300" style="width:24px"></span>
+        <span class="block h-px bg-gold"     style="width:16px; transition: all 0.3s"></span>
+      </button>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="md:hidden hidden glass mx-4 mt-3 rounded-2xl p-6">
+      <ul class="flex flex-col gap-5">
+        <li><a href="#features"   onclick="closeMobile()" class="text-sm tracking-ultra text-muted hover:text-gold transition-colors">FEATURES</a></li>
+        <li><a href="#showcase"   onclick="closeMobile()" class="text-sm tracking-ultra text-muted hover:text-gold transition-colors">SHOWCASE</a></li>
+        <li><a href="#experience" onclick="closeMobile()" class="text-sm tracking-ultra text-muted hover:text-gold transition-colors">EXPERIENCE</a></li>
+        <li><a href="#reserve"    onclick="closeMobile()" class="text-sm tracking-ultra text-muted hover:text-gold transition-colors">RESERVE</a></li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║                HERO                  ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <section class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-6 pt-24 pb-20">
+
+    <!-- Background grid -->
+    <div class="absolute inset-0 pointer-events-none" style="background-image: linear-gradient(rgba(201,169,110,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(201,169,110,0.03) 1px, transparent 1px); background-size: 80px 80px;"></div>
+
+    <!-- Radial glow -->
+    <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse 60% 50% at 50% 60%, rgba(201,169,110,0.07) 0%, transparent 70%);"></div>
+
+    <!-- Breathing orb (the signature element) -->
+    <div class="relative mb-14 animate-float">
+      <!-- Outer pulse ring -->
+      <div class="absolute inset-0 rounded-full orb-ring animate-breathe-ring scale-150"></div>
+      <!-- Mid ring -->
+      <div class="absolute inset-0 rounded-full orb-ring animate-breathe-ring scale-125" style="animation-delay: 0.8s; opacity: 0.5;"></div>
+      <!-- Core orb -->
+      <div class="relative w-28 h-28 md:w-36 md:h-36 rounded-full orb-core animate-breathe noise shadow-2xl"
+           style="box-shadow: 0 0 60px rgba(201,169,110,0.25), 0 0 120px rgba(201,169,110,0.10);">
+        <!-- Inner specular -->
+        <div class="absolute top-5 left-6 w-8 h-5 rounded-full" style="background: rgba(255,255,255,0.18); filter: blur(4px); transform: rotate(-20deg);"></div>
+      </div>
+    </div>
+
+    <!-- Eyebrow -->
+    <p class="text-xs tracking-ultra text-gold mb-6 animate-fade-up" style="animation-delay:0.1s; opacity:0; animation-fill-mode:forwards;">
+      INTRODUCING AETHER
+    </p>
+
+    <!-- Headline -->
+    <h1 class="font-display text-center leading-none mb-6 animate-fade-up" style="animation-delay:0.25s; opacity:0; animation-fill-mode:forwards;">
+      <span class="block text-5xl md:text-7xl lg:text-8xl font-light text-alabaster tracking-tight">Intelligence,</span>
+      <span class="block text-5xl md:text-7xl lg:text-8xl font-light text-gold-gradient tracking-tight italic">Worn.</span>
+    </h1>
+
+    <!-- Subhead -->
+    <p class="max-w-lg text-center text-base md:text-lg text-muted font-light leading-relaxed mb-12 animate-fade-up" style="animation-delay:0.4s; opacity:0; animation-fill-mode:forwards;">
+      A living intelligence you carry close. Aether learns how you think, moves with how you live, and speaks only when it matters.
+    </p>
+
+    <!-- CTAs -->
+    <div class="flex flex-col sm:flex-row items-center gap-4 animate-fade-up" style="animation-delay:0.55s; opacity:0; animation-fill-mode:forwards;">
+      <a href="#reserve" class="btn-gold text-void font-semibold text-sm tracking-wide2 px-8 py-3.5 rounded-full inline-flex items-center gap-2">
+        Reserve yours
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      </a>
+      <a href="#showcase" class="btn-outline text-alabaster font-medium text-sm tracking-wide2 px-8 py-3.5 rounded-full inline-flex items-center gap-2">
+        See how it works
+      </a>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-up" style="animation-delay:1s; opacity:0; animation-fill-mode:forwards;">
+      <span class="text-xs tracking-ultra text-muted">SCROLL</span>
+      <div class="w-px h-10 relative overflow-hidden" style="background: rgba(201,169,110,0.15);">
+        <div class="absolute top-0 left-0 w-full h-1/2 bg-gold" style="animation: scroll-line 2s ease-in-out infinite;"></div>
+      </div>
+    </div>
+    <style>
+      @keyframes scroll-line {
+        0%   { transform: translateY(-100%); opacity:1; }
+        60%  { transform: translateY(200%);  opacity:1; }
+        61%  { opacity: 0; }
+        100% { transform: translateY(200%);  opacity:0; }
+      }
+    </style>
+  </section>
+
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║             STATS STRIP              ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="divider-gold"></div>
+  <section class="py-14 px-6">
+    <div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+      <div class="reveal">
+        <p class="font-display text-4xl md:text-5xl text-alabaster stat-number" data-target="99">0<span class="text-gold">%</span></p>
+        <p class="text-xs tracking-ultra text-muted mt-2">Accuracy Rate</p>
+      </div>
+      <div class="reveal reveal-delay-1">
+        <p class="font-display text-4xl md:text-5xl text-alabaster stat-number" data-target="340"><span class="text-2xl text-gold">↑</span>0ms</p>
+        <p class="text-xs tracking-ultra text-muted mt-2">Response Latency</p>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <p class="font-display text-4xl md:text-5xl text-alabaster stat-number">72<span class="text-gold text-2xl">h</span></p>
+        <p class="text-xs tracking-ultra text-muted mt-2">Battery Life</p>
+      </div>
+      <div class="reveal reveal-delay-3">
+        <p class="font-display text-4xl md:text-5xl text-alabaster stat-number">4.2<span class="text-gold text-2xl">g</span></p>
+        <p class="text-xs tracking-ultra text-muted mt-2">Total Weight</p>
+      </div>
+    </div>
+  </section>
+  <div class="divider-gold"></div>
+
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║           FEATURES GRID              ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <section id="features" class="py-28 px-6">
+    <div class="max-w-6xl mx-auto">
+      <!-- Section header -->
+      <div class="text-center mb-20 reveal">
+        <p class="text-xs tracking-ultra text-gold mb-4">THE INTELLIGENCE INSIDE</p>
+        <h2 class="font-display text-4xl md:text-6xl font-light text-alabaster leading-tight">
+          Engineered for the<br /><em class="text-gold-gradient not-italic">extraordinary</em>
+        </h2>
+      </div>
+
+      <!-- Feature cards grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+        <!-- Card 1 – Ambient AI -->
+        <div class="glass rounded-3xl p-8 relative overflow-hidden group cursor-default reveal reveal-delay-1 transition-all duration-500" style="grid-row: span 1;">
+          <div class="absolute top-0 right-0 w-32 h-32 rounded-full" style="background: radial-gradient(circle, rgba(201,169,110,0.08), transparent); transform: translate(30%, -30%);"></div>
+          <div class="icon-ring w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
+            <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          </div>
+          <h3 class="font-display text-2xl font-light text-alabaster mb-3">Ambient Intelligence</h3>
+          <p class="text-sm text-muted leading-relaxed font-light">
+            Aether listens with contextual awareness — not surveillance. It surfaces insights only when they're worth your attention, silently learning your rhythms over time.
+          </p>
+          <div class="mt-6 h-px divider-gold opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <p class="mt-4 text-xs tracking-ultra text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-500">Always present, never intrusive →</p>
+        </div>
+
+        <!-- Card 2 – Neural Voice -->
+        <div class="glass rounded-3xl p-8 relative overflow-hidden group cursor-default reveal reveal-delay-2 transition-all duration-500">
+          <div class="absolute bottom-0 left-0 w-40 h-40 rounded-full" style="background: radial-gradient(circle, rgba(201,169,110,0.06), transparent); transform: translate(-30%, 30%);"></div>
+          <div class="icon-ring w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
+            <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+          </div>
+          <h3 class="font-display text-2xl font-light text-alabaster mb-3">Neural Voice</h3>
+          <p class="text-sm text-muted leading-relaxed font-light">
+            A voice model tuned entirely to you. Aether learns your cadence, vocabulary, and the nuances of how you ask — delivering answers that feel like a natural conversation.
+          </p>
+          <div class="mt-6 h-px divider-gold opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <p class="mt-4 text-xs tracking-ultra text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-500">Your words, understood →</p>
+        </div>
+
+        <!-- Card 3 – Privacy Core (tall) -->
+        <div class="glass rounded-3xl p-8 relative overflow-hidden group cursor-default reveal reveal-delay-3 transition-all duration-500 md:row-span-2">
+          <div class="absolute inset-0 opacity-5 pointer-events-none" style="background: repeating-linear-gradient(45deg, #C9A96E 0px, #C9A96E 1px, transparent 1px, transparent 12px);"></div>
+          <div class="icon-ring w-12 h-12 rounded-2xl flex items-center justify-center mb-6 relative z-10">
+            <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <h3 class="font-display text-2xl font-light text-alabaster mb-3 relative z-10">Privacy Core</h3>
+          <p class="text-sm text-muted leading-relaxed font-light relative z-10">
+            Everything you share with Aether stays with you. On-device processing means your conversations never touch a server. What is private should remain private.
+          </p>
+
+          <!-- Security visual -->
+          <div class="mt-8 relative z-10">
+            <div class="rounded-2xl border border-border p-5" style="background: rgba(10,10,11,0.5);">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-2 h-2 rounded-full bg-gold animate-pulse"></div>
+                <span class="text-xs tracking-ultra text-muted">ENCRYPTION STATUS</span>
+              </div>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-muted">On-device model</span>
+                  <span class="text-xs text-gold font-medium">ACTIVE</span>
+                </div>
+                <div class="h-px hairline border-t"></div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-muted">Cloud sync</span>
+                  <span class="text-xs text-muted">OFF</span>
+                </div>
+                <div class="h-px hairline border-t"></div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-muted">AES-256 encryption</span>
+                  <span class="text-xs text-gold font-medium">ENABLED</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 h-px divider-gold opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <p class="mt-4 text-xs tracking-ultra text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-500">Built to keep secrets →</p>
+        </div>
+
+        <!-- Card 4 – Precision Craft -->
+        <div class="glass rounded-3xl p-8 relative overflow-hidden group cursor-default reveal reveal-delay-1 transition-all duration-500">
+          <div class="icon-ring w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
+            <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+          </div>
+          <h3 class="font-display text-2xl font-light text-alabaster mb-3">Precision Craft</h3>
+          <p class="text-sm text-muted leading-relaxed font-light">
+            Machined from aerospace-grade titanium, set with a single synthetic sapphire face. Aether is designed to last a decade, not a season.
+          </p>
+          <div class="mt-6 h-px divider-gold opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <p class="mt-4 text-xs tracking-ultra text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-500">Made to endure →</p>
+        </div>
+
+        <!-- Card 5 – Adaptive OS -->
+        <div class="glass rounded-3xl p-8 relative overflow-hidden group cursor-default reveal reveal-delay-2 transition-all duration-500">
+          <div class="icon-ring w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
+            <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </div>
+          <h3 class="font-display text-2xl font-light text-alabaster mb-3">Adaptive OS</h3>
+          <p class="text-sm text-muted leading-relaxed font-light">
+            AetherOS evolves silently. Monthly model updates are delivered over-the-air, so the device you wear in two years is meaningfully smarter than the one you open today.
+          </p>
+          <div class="mt-6 h-px divider-gold opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <p class="mt-4 text-xs tracking-ultra text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-500">Better with time →</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║         INTERACTIVE SHOWCASE         ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <section id="showcase" class="py-28 px-6" style="background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(201,169,110,0.04) 0%, transparent 70%);">
+    <div class="max-w-5xl mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-16 reveal">
+        <p class="text-xs tracking-ultra text-gold mb-4">LIVE DEMONSTRATION</p>
+        <h2 class="font-display text-4xl md:text-6xl font-light text-alabaster">
+          Experience <em class="text-gold-gradient not-italic">Aether</em>
+        </h2>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex items-center justify-center gap-0 mb-10 reveal">
+        <div class="glass rounded-full p-1 flex gap-1">
+          <button onclick="switchTab('morning')"   id="tab-morning"   class="tab-btn active border border-transparent text-xs tracking-ultra px-5 py-2.5 rounded-full">MORNING</button>
+          <button onclick="switchTab('meeting')"   id="tab-meeting"   class="tab-btn border border-transparent text-muted text-xs tracking-ultra px-5 py-2.5 rounded-full hover:text-alabaster transition-colors">MEETING</button>
+          <button onclick="switchTab('evening')"   id="tab-evening"   class="tab-btn border border-transparent text-muted text-xs tracking-ultra px-5 py-2.5 rounded-full hover:text-alabaster transition-colors">EVENING</button>
+        </div>
+      </div>
+
+      <!-- Tab content -->
+      <div class="relative reveal reveal-delay-1">
+
+        <!-- Morning -->
+        <div id="panel-morning" class="tab-panel active grid md:grid-cols-2 gap-6">
+          <div class="glass rounded-3xl p-8">
+            <p class="text-xs tracking-ultra text-gold mb-5">07:22 AM · YOUR CONTEXT</p>
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5" style="background: rgba(201,169,110,0.15);">
+                  <div class="w-1.5 h-1.5 rounded-full bg-gold"></div>
+                </div>
+                <p class="text-sm text-muted font-light leading-relaxed">You have a board presentation in 3 hours. Your slide deck was last edited at 11:48 PM. Three figures are not cross-referenced with the Q3 report.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5" style="background: rgba(201,169,110,0.15);">
+                  <div class="w-1.5 h-1.5 rounded-full bg-gold"></div>
+                </div>
+                <p class="text-sm text-muted font-light leading-relaxed">Rainfall expected at 9 AM — your usual route takes 12 minutes longer when wet. Leaving at 9:40 keeps your margin.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5" style="background: rgba(201,169,110,0.15);">
+                  <div class="w-1.5 h-1.5 rounded-full bg-gold"></div>
+                </div>
+                <p class="text-sm text-muted font-light leading-relaxed">Sleep score: 84. Cognitive peak window is between 9–11 AM today. Aether has cleared non-essential notifications until noon.</p>
+              </div>
+            </div>
+          </div>
+          <div class="glass rounded-3xl p-8 flex flex-col justify-between">
+            <div>
+              <p class="text-xs tracking-ultra text-gold mb-5">AETHER SPEAKS</p>
+              <p class="font-display text-xl font-light text-alabaster leading-relaxed italic">
+                "Good morning. Before you open your laptop — slide fourteen has a revenue figure that doesn't match the audited report. It's a decimal place. Fixable in under two minutes."
+              </p>
+            </div>
+            <div class="mt-8 h-px divider-gold"></div>
+            <p class="mt-4 text-xs text-muted font-light">Aether noticed this by comparing your deck to the document you attached to your email last Wednesday.</p>
+          </div>
+        </div>
+
+        <!-- Meeting -->
+        <div id="panel-meeting" class="tab-panel grid md:grid-cols-2 gap-6">
+          <div class="glass rounded-3xl p-8">
+            <p class="text-xs tracking-ultra text-gold mb-5">11:03 AM · LIVE MEETING</p>
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5" style="background: rgba(201,169,110,0.15);">
+                  <div class="w-1.5 h-1.5 rounded-full bg-gold"></div>
+                </div>
+                <p class="text-sm text-muted font-light leading-relaxed">Marcus has spoken for 18 of the last 22 minutes. Three action items have been mentioned without an owner assigned.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5" style="background: rgba(201,169,110,0.15);">
+                  <div class="w-1.5 h-1.5 rounded-full bg-gold"></div>
+                </div>
+                <p class="text-sm text-muted font-light leading-relaxed">The budget figure quoted ($2.4M) differs from the figure in the signed proposal ($2.1M). Meeting is still live.</p>
+              </div>
+            </div>
+          </div>
+          <div class="glass rounded-3xl p-8 flex flex-col justify-between">
+            <div>
+              <p class="text-xs tracking-ultra text-gold mb-5">AETHER WHISPERS</p>
+              <p class="font-display text-xl font-light text-alabaster leading-relaxed italic">
+                "The budget figure just cited is $300K above what was signed. You may want to pause before agreeing to anything. I'll hold a draft follow-up email ready."
+              </p>
+            </div>
+            <div class="mt-8 h-px divider-gold"></div>
+            <p class="mt-4 text-xs text-muted font-light">Delivered as a silent haptic tap. Only you notice.</p>
+          </div>
+        </div>
+
+        <!-- Evening -->
+        <div id="panel-evening" class="tab-panel grid md:grid-cols-2 gap-6">
+          <div class="glass rounded-3xl p-8">
+            <p class="text-xs tracking-ultra text-gold mb-5">08:15 PM · WIND DOWN</p>
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5" style="background: rgba(201,169,110,0.15);">
+                  <div class="w-1.5 h-1.5 rounded-full bg-gold"></div>
+                </div>
+                <p class="text-sm text-muted font-light leading-relaxed">Today's cognitive load: high. You resolved 4 of 5 priorities. The board presentation is marked complete with positive feedback from Elena.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5" style="background: rgba(201,169,110,0.15);">
+                  <div class="w-1.5 h-1.5 rounded-full bg-gold"></div>
+                </div>
+                <p class="text-sm text-muted font-light leading-relaxed">Sleep window recommendation: 10:30 PM for an 8-hour cycle. Aether will activate deep focus blocking at 10:15 PM.</p>
+              </div>
+            </div>
+          </div>
+          <div class="glass rounded-3xl p-8 flex flex-col justify-between">
+            <div>
+              <p class="text-xs tracking-ultra text-gold mb-5">AETHER REFLECTS</p>
+              <p class="font-display text-xl font-light text-alabaster leading-relaxed italic">
+                "Strong day. The slip you caught in the slide deck saved the presentation. I've scheduled the corrected file to be shared with the board tomorrow at 9 AM."
+              </p>
+            </div>
+            <div class="mt-8 h-px divider-gold"></div>
+            <p class="mt-4 text-xs text-muted font-light">Aether remembers so you don't have to.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║         EXPERIENCE SECTION           ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <section id="experience" class="py-28 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid md:grid-cols-2 gap-16 items-center">
+
+        <!-- Left: visual -->
+        <div class="reveal order-2 md:order-1">
+          <div class="relative">
+            <!-- Pendant visual -->
+            <div class="relative mx-auto w-64 h-64">
+              <!-- Outer ring -->
+              <div class="absolute inset-0 rounded-full border hairline border-border"></div>
+              <!-- Mid ring -->
+              <div class="absolute inset-4 rounded-full border hairline" style="border-color: rgba(201,169,110,0.2);"></div>
+              <!-- Inner ring -->
+              <div class="absolute inset-8 rounded-full border hairline" style="border-color: rgba(201,169,110,0.3);"></div>
+              <!-- Core -->
+              <div class="absolute inset-14 rounded-full orb-core animate-breathe noise" style="box-shadow: 0 0 40px rgba(201,169,110,0.3);">
+                <div class="absolute top-2 left-3 w-4 h-2.5 rounded-full" style="background: rgba(255,255,255,0.2); filter: blur(2px); transform: rotate(-20deg);"></div>
+              </div>
+              <!-- Tick marks -->
+              <svg class="absolute inset-0 w-full h-full" viewBox="0 0 256 256">
+                <g opacity="0.25" stroke="#C9A96E" stroke-width="1">
+                  <line x1="128" y1="4"   x2="128" y2="16"/>
+                  <line x1="128" y1="240" x2="128" y2="252"/>
+                  <line x1="4"   y1="128" x2="16"  y2="128"/>
+                  <line x1="240" y1="128" x2="252" y2="128"/>
+                </g>
+              </svg>
+            </div>
+
+            <!-- Chain visual suggestion -->
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-16 h-16 w-px" style="background: linear-gradient(to bottom, transparent, rgba(201,169,110,0.4));"></div>
+
+            <!-- Spec callouts -->
+            <div class="absolute -right-4 top-1/2 -translate-y-6 flex items-center gap-2">
+              <div class="w-8 h-px bg-gold opacity-40"></div>
+              <p class="text-xs text-muted whitespace-nowrap">Sapphire face</p>
+            </div>
+            <div class="absolute -left-4 top-1/3 flex items-center gap-2 flex-row-reverse">
+              <div class="w-8 h-px bg-gold opacity-40"></div>
+              <p class="text-xs text-muted whitespace-nowrap">Ti housing</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: copy -->
+        <div class="order-1 md:order-2 reveal reveal-delay-2">
+          <p class="text-xs tracking-ultra text-gold mb-5">MATERIALS & FORM</p>
+          <h2 class="font-display text-4xl md:text-5xl font-light text-alabaster mb-8 leading-tight">
+            Worn close.<br /><em class="text-gold-gradient not-italic">Crafted to last.</em>
+          </h2>
+          <div class="space-y-6">
+            <p class="text-sm text-muted font-light leading-relaxed">
+              Aether's body is precision-milled from a single block of grade-5 titanium — the same alloy used in surgical implants and aerospace frames. It holds its edge, keeps its finish, and resists everything daily life throws at it.
+            </p>
+            <p class="text-sm text-muted font-light leading-relaxed">
+              The face is a 4mm synthetic sapphire disc, the second-hardest transparent material on earth. Scratch it if you can.
+            </p>
+            <p class="text-sm text-muted font-light leading-relaxed">
+              Available in three finishes — Raw Titanium, Midnight PVD, and 18k Liquid Gold — with a hand-finished chain designed by artisans in Tokyo.
+            </p>
+          </div>
+
+          <!-- Finish selector -->
+          <div class="mt-10">
+            <p class="text-xs tracking-ultra text-muted mb-4">SELECT FINISH</p>
+            <div class="flex items-center gap-4" id="finish-selector">
+              <button onclick="selectFinish(this, 'Raw Titanium')"   class="finish-btn active w-10 h-10 rounded-full border-2 border-gold transition-all duration-300" style="background: linear-gradient(135deg, #8A8A8E, #B0B0B4);" aria-label="Raw Titanium"></button>
+              <button onclick="selectFinish(this, 'Midnight PVD')"   class="finish-btn w-10 h-10 rounded-full border-2 border-transparent hover:border-muted transition-all duration-300" style="background: linear-gradient(135deg, #1A1A1E, #0A0A10);" aria-label="Midnight PVD"></button>
+              <button onclick="selectFinish(this, '18k Liquid Gold')" class="finish-btn w-10 h-10 rounded-full border-2 border-transparent hover:border-gold transition-all duration-300" style="background: linear-gradient(135deg, #C9A96E, #A88040);" aria-label="18k Liquid Gold"></button>
+              <span id="finish-label" class="text-sm text-muted ml-2">Raw Titanium</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║          TESTIMONIALS                ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="divider-gold"></div>
+  <section class="py-24 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16 reveal">
+        <p class="text-xs tracking-ultra text-gold mb-4">FROM EARLY MEMBERS</p>
+        <h2 class="font-display text-4xl md:text-5xl font-light text-alabaster">
+          Worn by the <em class="text-gold-gradient not-italic">thoughtful few</em>
+        </h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-5">
+        <div class="testimonial-card glass rounded-3xl p-8 border border-border cursor-default reveal reveal-delay-1">
+          <div class="flex items-center gap-1 mb-5">
+            <span class="text-gold text-sm">★★★★★</span>
+          </div>
+          <p class="font-display text-lg font-light text-alabaster italic leading-relaxed mb-6">
+            "It noticed I hadn't eaten before a two-hour call and quietly pushed my lunch reminder. No banner. Just a soft tap."
+          </p>
+          <div class="h-px divider-gold mb-5"></div>
+          <p class="text-xs text-muted tracking-wider">ISABELLE K. &mdash; Founder, Paris</p>
+        </div>
+
+        <div class="testimonial-card glass rounded-3xl p-8 border border-border cursor-default reveal reveal-delay-2">
+          <div class="flex items-center gap-1 mb-5">
+            <span class="text-gold text-sm">★★★★★</span>
+          </div>
+          <p class="font-display text-lg font-light text-alabaster italic leading-relaxed mb-6">
+            "I've tried every AI product out there. This is the first one that made me feel understood rather than tracked."
+          </p>
+          <div class="h-px divider-gold mb-5"></div>
+          <p class="text-xs text-muted tracking-wider">THEO M. &mdash; GP, Singapore</p>
+        </div>
+
+        <div class="testimonial-card glass rounded-3xl p-8 border border-border cursor-default reveal reveal-delay-3">
+          <div class="flex items-center gap-1 mb-5">
+            <span class="text-gold text-sm">★★★★★</span>
+          </div>
+          <p class="font-display text-lg font-light text-alabaster italic leading-relaxed mb-6">
+            "The craftsmanship alone justifies it. The intelligence inside makes it irreplaceable."
+          </p>
+          <div class="h-px divider-gold mb-5"></div>
+          <p class="text-xs text-muted tracking-wider">AMARA O. &mdash; Creative Director, Lagos</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="divider-gold"></div>
+
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║          RESERVE SECTION             ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <section id="reserve" class="py-32 px-6" style="background: radial-gradient(ellipse 70% 50% at 50% 50%, rgba(201,169,110,0.06) 0%, transparent 70%);">
+    <div class="max-w-3xl mx-auto text-center reveal">
+      <!-- Orb -->
+      <div class="relative inline-block mb-12">
+        <div class="absolute inset-0 rounded-full orb-ring animate-breathe-ring scale-150"></div>
+        <div class="w-20 h-20 rounded-full orb-core animate-breathe noise mx-auto" style="box-shadow: 0 0 50px rgba(201,169,110,0.22);">
+          <div class="absolute top-3 left-4 w-5 h-3 rounded-full" style="background: rgba(255,255,255,0.2); filter:blur(2px); transform:rotate(-20deg);"></div>
+        </div>
+      </div>
+
+      <p class="text-xs tracking-ultra text-gold mb-5">LIMITED TO 500 UNITS &mdash; FOUNDING EDITION</p>
+      <h2 class="font-display text-4xl md:text-6xl lg:text-7xl font-light text-alabaster mb-6 leading-tight">
+        Your place in the<br /><em class="text-gold-gradient not-italic">first circle.</em>
+      </h2>
+      <p class="text-base text-muted font-light leading-relaxed mb-12 max-w-lg mx-auto">
+        The Founding Edition is reserved for those who believe intelligence should feel like a quiet partner, not a noisy tool. Shipping begins April 2025.
+      </p>
+
+      <!-- Email form (no <form> tag) -->
+      <div class="glass rounded-2xl p-2 flex flex-col sm:flex-row items-stretch gap-2 max-w-md mx-auto mb-6">
+        <input
+          id="email-input"
+          type="email"
+          placeholder="your@email.com"
+          class="flex-1 bg-transparent px-4 py-3 text-sm text-alabaster placeholder-muted outline-none font-light"
+          style="min-width:0;"
+        />
+        <button onclick="handleReserve()" class="btn-gold text-void font-semibold text-xs tracking-wide2 px-6 py-3 rounded-xl whitespace-nowrap">
+          Reserve your Aether
+        </button>
+      </div>
+      <p id="reserve-message" class="text-xs text-muted font-light" style="min-height:1.5em;">
+        No commitment. Early access guaranteed if you're invited.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║               FOOTER                 ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <footer class="border-t hairline border-border py-16 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
+        <!-- Brand -->
+        <div class="col-span-2 md:col-span-1">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-6 h-6 rounded-full orb-core"></div>
+            <span class="font-display text-lg tracking-ultra text-alabaster">AETHER</span>
+          </div>
+          <p class="text-xs text-muted font-light leading-relaxed">Intelligence worn close. Designed for those who think deeply and move carefully.</p>
+        </div>
+
+        <!-- Product -->
+        <div>
+          <p class="text-xs tracking-ultra text-muted mb-5">PRODUCT</p>
+          <ul class="space-y-3">
+            <li><a href="#features"   class="text-xs text-muted hover:text-gold transition-colors duration-300">Features</a></li>
+            <li><a href="#showcase"   class="text-xs text-muted hover:text-gold transition-colors duration-300">Showcase</a></li>
+            <li><a href="#experience" class="text-xs text-muted hover:text-gold transition-colors duration-300">Materials</a></li>
+            <li><a href="#"           class="text-xs text-muted hover:text-gold transition-colors duration-300">Technical Specs</a></li>
+          </ul>
+        </div>
+
+        <!-- Company -->
+        <div>
+          <p class="text-xs tracking-ultra text-muted mb-5">COMPANY</p>
+          <ul class="space-y-3">
+            <li><a href="#" class="text-xs text-muted hover:text-gold transition-colors duration-300">About</a></li>
+            <li><a href="#" class="text-xs text-muted hover:text-gold transition-colors duration-300">Philosophy</a></li>
+            <li><a href="#" class="text-xs text-muted hover:text-gold transition-colors duration-300">Atelier</a></li>
+            <li><a href="#" class="text-xs text-muted hover:text-gold transition-colors duration-300">Press</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal -->
+        <div>
+          <p class="text-xs tracking-ultra text-muted mb-5">LEGAL</p>
+          <ul class="space-y-3">
+            <li><a href="#" class="text-xs text-muted hover:text-gold transition-colors duration-300">Privacy</a></li>
+            <li><a href="#" class="text-xs text-muted hover:text-gold transition-colors duration-300">Terms</a></li>
+            <li><a href="#" class="text-xs text-muted hover:text-gold transition-colors duration-300">Security</a></li>
+            <li><a href="#" class="text-xs text-muted hover:text-gold transition-colors duration-300">Cookies</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="divider-gold mb-8"></div>
+
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-xs text-muted font-light tracking-wide">&copy; 2025 Aether Ltd. All rights reserved. Crafted with intention.</p>
+        <div class="flex items-center gap-6">
+          <a href="#" class="text-muted hover:text-gold transition-colors duration-300" aria-label="Instagram">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+          <a href="#" class="text-muted hover:text-gold transition-colors duration-300" aria-label="Twitter/X">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <a href="#" class="text-muted hover:text-gold transition-colors duration-300" aria-label="LinkedIn">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║              JAVASCRIPT              ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <script>
+    /* ── Navbar scroll effect ────────────────── */
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 60) {
+        navbar.style.padding = '14px 0';
+        navbar.style.background = 'rgba(10,10,11,0.88)';
+        navbar.style.backdropFilter = 'blur(20px) saturate(1.3)';
+        navbar.style.webkitBackdropFilter = 'blur(20px) saturate(1.3)';
+        navbar.style.borderBottom = '1px solid rgba(42,42,46,0.7)';
+      } else {
+        navbar.style.padding = '28px 0';
+        navbar.style.background = 'transparent';
+        navbar.style.backdropFilter = 'none';
+        navbar.style.webkitBackdropFilter = 'none';
+        navbar.style.borderBottom = 'none';
+      }
+    }, { passive: true });
+
+    /* ── Mobile menu ─────────────────────────── */
+    const mobileMenu   = document.getElementById('mobile-menu');
+    const mobileToggle = document.getElementById('mobile-toggle');
+    let menuOpen = false;
+    mobileToggle.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      mobileMenu.classList.toggle('hidden', !menuOpen);
+    });
+    function closeMobile() {
+      menuOpen = false;
+      mobileMenu.classList.add('hidden');
+    }
+
+    /* ── Scroll reveal ───────────────────────── */
+    const revealEls = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('in-view');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    revealEls.forEach(el => io.observe(el));
+
+    /* ── Tab switching ───────────────────────── */
+    function switchTab(name) {
+      ['morning','meeting','evening'].forEach(id => {
+        const btn   = document.getElementById('tab-' + id);
+        const panel = document.getElementById('panel-' + id);
+        const active = id === name;
+        btn.classList.toggle('active', active);
+        btn.classList.toggle('text-muted', !active);
+        panel.classList.toggle('active', active);
+      });
+    }
+
+    /* ── Finish selector ─────────────────────── */
+    function selectFinish(btn, label) {
+      document.querySelectorAll('.finish-btn').forEach(b => {
+        b.classList.remove('border-gold');
+        b.classList.add('border-transparent');
+      });
+      btn.classList.add('border-gold');
+      btn.classList.remove('border-transparent');
+      document.getElementById('finish-label').textContent = label;
+    }
+
+    /* ── Reserve form ────────────────────────── */
+    function handleReserve() {
+      const input = document.getElementById('email-input');
+      const msg   = document.getElementById('reserve-message');
+      const email = input.value.trim();
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+      if (!valid) {
+        msg.textContent = 'Please enter a valid email address.';
+        msg.style.color = '#C9A96E';
+        input.focus();
+        return;
+      }
+
+      msg.textContent  = '✦  You're on the list. We'll be in touch.';
+      msg.style.color  = '#C9A96E';
+      input.value      = '';
+      input.disabled   = true;
+      setTimeout(() => {
+        msg.textContent = 'No commitment. Early access guaranteed if you're invited.';
+        msg.style.color = '';
+        input.disabled  = false;
+      }, 5000);
+    }
+
+    /* ── Enter key on email input ────────────── */
+    document.getElementById('email-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleReserve();
+    });
+
+    /* ── Smooth parallax on hero orb ─────────── */
+    document.addEventListener('mousemove', (e) => {
+      const x = (e.clientX / window.innerWidth  - 0.5) * 10;
+      const y = (e.clientY / window.innerHeight - 0.5) * 10;
+      document.querySelectorAll('.orb-core').forEach(orb => {
+        orb.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
+      });
+    });
+  </script>
+</body>
+</html>
